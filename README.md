@@ -1,7 +1,7 @@
 # Integração BNCC - ORSD
 
 ## Proposito
-Apresentar um modelo ontologico para estruturar e integrar os conceitos da Base Nacional Comum Curricular (BNCC) de Computacao aos conteudos da disciplina de Matematica do Ensino Fundamental II (6º ao 9º ano). Com a ontologia, deve ser possivel instanciar, consultar e recuperar informacoes sobre as relacoes conceituais entre computacao e a matematica, de modo a auxiliar professores, coordenadores e elaboradores de curriculo no planejamento pedagogico integrado.
+Apresentar um modelo ontologico para estruturar e integrar os conceitos da Base Nacional Comum Curricular (BNCC) de Computação aos conteudos da disciplina de Matemática do Ensino Fundamental II (6º ao 9º ano). Com a ontologia, deve ser possivel instanciar, consultar e recuperar informações sobre as relações conceituais entre computação e a matemática, de modo a auxiliar professores, coordenadores e elaboradores de currículo no planejamento pedagogico integrado.
 
 ## Escopo
 A ontologia deve modelar o currículo de Computação do Ensino Fundamental II (6º ao 9º ano) conforme a BNCC, respondendo a questões sobre conexões interdisciplinares e progressão conceitual.

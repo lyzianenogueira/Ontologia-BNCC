@@ -1,0 +1,847 @@
+@prefix : <http://example.com#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix gufo: <http://purl.org/nemo/gufo#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <http://example.com#> .
+
+<http://example.com> rdf:type owl:Ontology ;
+                      owl:imports gufo: .
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://example.com#contem_conceito
+:contem_conceito rdf:type owl:ObjectProperty ;
+                 owl:inverseOf :pertence_a_unidade ;
+                 rdfs:domain :UnidadeTematica ;
+                 rdfs:range :ConceitoDisciplinar .
+
+
+###  http://example.com#ensinoFundamental2HasDisciplina
+:ensinoFundamental2HasDisciplina rdf:type owl:ObjectProperty ;
+                                 rdfs:domain :EnsinoFundamental2 ;
+                                 rdfs:range :Disciplina .
+
+
+###  http://example.com#especifica
+:especifica rdf:type owl:ObjectProperty ;
+            owl:inverseOf :especificado_por ;
+            rdfs:domain :AnoEscolar ;
+            rdfs:range :ConceitoDisciplinar .
+
+
+###  http://example.com#especificado_por
+:especificado_por rdf:type owl:ObjectProperty ;
+                  rdfs:domain :ConceitoDisciplinar ;
+                  rdfs:range :AnoEscolar .
+
+
+###  http://example.com#pertence_a_disciplina
+:pertence_a_disciplina rdf:type owl:ObjectProperty ;
+                       owl:inverseOf :possui_unidade ;
+                       rdfs:domain :UnidadeTematica ;
+                       rdfs:range :Disciplina .
+
+
+###  http://example.com#pertence_a_unidade
+:pertence_a_unidade rdf:type owl:ObjectProperty ;
+                    rdfs:domain :ConceitoDisciplinar ;
+                    rdfs:range :UnidadeTematica .
+
+
+###  http://example.com#possui_unidade
+:possui_unidade rdf:type owl:ObjectProperty ;
+                rdfs:domain :Disciplina ;
+                rdfs:range :UnidadeTematica .
+
+
+###  http://example.com#precede
+:precede rdf:type owl:ObjectProperty ;
+         owl:inverseOf :precedido_por ;
+         rdf:type owl:TransitiveProperty ;
+         rdfs:domain :ConceitoDisciplinar ;
+         rdfs:range :ConceitoDisciplinar ;
+         rdfs:label "precede"@en .
+
+
+###  http://example.com#precede_a
+:precede_a rdf:type owl:ObjectProperty ;
+           owl:inverseOf :sucedido_por ;
+           rdf:type owl:TransitiveProperty ;
+           rdfs:domain :AnoEscolar ;
+           rdfs:range :AnoEscolar .
+
+
+###  http://example.com#precedido_por
+:precedido_por rdf:type owl:ObjectProperty ,
+                        owl:TransitiveProperty ;
+               rdfs:domain :ConceitoDisciplinar ;
+               rdfs:range :ConceitoDisciplinar .
+
+
+###  http://example.com#relacionaSe_com
+:relacionaSe_com rdf:type owl:ObjectProperty ,
+                          owl:SymmetricProperty ;
+                 rdfs:domain :ConceitoDisciplinar ;
+                 rdfs:range :ConceitoDisciplinar .
+
+
+###  http://example.com#sucedido_por
+:sucedido_por rdf:type owl:ObjectProperty ,
+                       owl:TransitiveProperty ;
+              rdfs:domain :AnoEscolar ;
+              rdfs:range :AnoEscolar .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://example.com#AnoEscolar
+:AnoEscolar rdf:type owl:Class ;
+            rdfs:subClassOf gufo:FunctionalComplex ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :especifica ;
+                              owl:someValuesFrom :ConceitoDisciplinar
+                            ] ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :especifica ;
+                              owl:allValuesFrom :ConceitoDisciplinar
+                            ] .
+
+
+###  http://example.com#Compartilha
+:Compartilha rdf:type owl:Class ;
+             rdfs:subClassOf :ConexaoCurricular .
+
+
+###  http://example.com#Computacao
+:Computacao rdf:type owl:Class ;
+            rdfs:subClassOf :Disciplina ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :possui_unidade ;
+                              owl:allValuesFrom :UnidadeTematicaComputacao
+                            ] ;
+            owl:disjointWith :Matematica .
+
+
+###  http://example.com#ConceitoBase
+:ConceitoBase rdf:type owl:Class ;
+              owl:equivalentClass [ owl:intersectionOf ( :ConceitoMatematico
+                                                         [ rdf:type owl:Restriction ;
+                                                           owl:onProperty :precede ;
+                                                           owl:someValuesFrom :ConceitoComputacional
+                                                         ]
+                                                       ) ;
+                                    rdf:type owl:Class
+                                  ] .
+
+
+###  http://example.com#ConceitoComputacional
+:ConceitoComputacional rdf:type owl:Class ;
+                       owl:equivalentClass [ owl:intersectionOf ( :ConceitoDisciplinar
+                                                                  [ rdf:type owl:Restriction ;
+                                                                    owl:onProperty :pertence_a_unidade ;
+                                                                    owl:someValuesFrom :UnidadeTematicaComputacao
+                                                                  ]
+                                                                ) ;
+                                             rdf:type owl:Class
+                                           ] ;
+                       rdfs:subClassOf :ConceitoDisciplinar ,
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty :pertence_a_unidade ;
+                                         owl:allValuesFrom :UnidadeTematicaComputacao
+                                       ] ;
+                       owl:disjointWith :ConceitoMatematico .
+
+
+###  http://example.com#ConceitoDisciplinar
+:ConceitoDisciplinar rdf:type owl:Class ;
+                     rdfs:subClassOf gufo:FunctionalComplex ,
+                                     [ rdf:type owl:Restriction ;
+                                       owl:onProperty :pertence_a_unidade ;
+                                       owl:someValuesFrom :UnidadeTematica
+                                     ] ,
+                                     [ rdf:type owl:Restriction ;
+                                       owl:onProperty :pertence_a_unidade ;
+                                       owl:allValuesFrom :UnidadeTematica
+                                     ] .
+
+
+###  http://example.com#ConceitoFinal
+:ConceitoFinal rdf:type owl:Class ;
+               owl:equivalentClass [ owl:intersectionOf ( :ConceitoDisciplinar
+                                                          [ rdf:type owl:Class ;
+                                                            owl:complementOf [ rdf:type owl:Restriction ;
+                                                                               owl:onProperty :precede ;
+                                                                               owl:someValuesFrom :ConceitoDisciplinar
+                                                                             ]
+                                                          ]
+                                                        ) ;
+                                     rdf:type owl:Class
+                                   ] .
+
+
+###  http://example.com#ConceitoInterdisciplinar
+:ConceitoInterdisciplinar rdf:type owl:Class ;
+                          owl:equivalentClass [ rdf:type owl:Class ;
+                                                owl:unionOf ( [ owl:intersectionOf ( :ConceitoComputacional
+                                                                                     [ rdf:type owl:Restriction ;
+                                                                                       owl:onProperty :relacionaSe_com ;
+                                                                                       owl:someValuesFrom :ConceitoMatematico
+                                                                                     ]
+                                                                                   ) ;
+                                                                rdf:type owl:Class
+                                                              ]
+                                                              [ owl:intersectionOf ( :ConceitoMatematico
+                                                                                     [ rdf:type owl:Restriction ;
+                                                                                       owl:onProperty :relacionaSe_com ;
+                                                                                       owl:someValuesFrom :ConceitoComputacional
+                                                                                     ]
+                                                                                   ) ;
+                                                                rdf:type owl:Class
+                                                              ]
+                                                            )
+                                              ] .
+
+
+###  http://example.com#ConceitoMatematico
+:ConceitoMatematico rdf:type owl:Class ;
+                    owl:equivalentClass [ owl:intersectionOf ( :ConceitoDisciplinar
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty :pertence_a_unidade ;
+                                                                 owl:someValuesFrom :UnidadeTematicaMatematica
+                                                               ]
+                                                             ) ;
+                                          rdf:type owl:Class
+                                        ] ;
+                    rdfs:subClassOf :ConceitoDisciplinar ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty :pertence_a_unidade ;
+                                      owl:allValuesFrom :UnidadeTematicaMatematica
+                                    ] .
+
+
+###  http://example.com#ConexaoCurricular
+:ConexaoCurricular rdf:type owl:Class ;
+                   rdfs:subClassOf gufo:Relator ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty gufo:mediates ;
+                                     owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                     owl:onClass :AnoEscolar
+                                   ] ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty gufo:mediates ;
+                                     owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                     owl:onClass :ConceitoComputacional
+                                   ] ,
+                                   [ rdf:type owl:Restriction ;
+                                     owl:onProperty gufo:mediates ;
+                                     owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                     owl:onClass :ConceitoMatematico
+                                   ] .
+
+
+###  http://example.com#Disciplina
+:Disciplina rdf:type owl:Class ;
+            rdfs:subClassOf gufo:FunctionalComplex ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :possui_unidade ;
+                              owl:someValuesFrom :UnidadeTematica
+                            ] ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :possui_unidade ;
+                              owl:allValuesFrom :UnidadeTematica
+                            ] .
+
+
+###  http://example.com#EnsinoFundamental2
+:EnsinoFundamental2 rdf:type owl:Class ;
+                    rdfs:subClassOf gufo:FunctionalComplex .
+
+
+###  http://example.com#Matematica
+:Matematica rdf:type owl:Class ;
+            rdfs:subClassOf :Disciplina ,
+                            [ rdf:type owl:Restriction ;
+                              owl:onProperty :possui_unidade ;
+                              owl:allValuesFrom :UnidadeTematicaMatematica
+                            ] .
+
+
+###  http://example.com#Previsao
+:Previsao rdf:type owl:Class ;
+          rdfs:subClassOf gufo:Relator ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty gufo:mediates ;
+                            owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                            owl:onClass :AnoEscolar
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty gufo:mediates ;
+                            owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                            owl:onClass :ConceitoComputacional
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty gufo:mediates ;
+                            owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                            owl:onClass :ConceitoMatematico
+                          ] .
+
+
+###  http://example.com#Reforca
+:Reforca rdf:type owl:Class ;
+         rdfs:subClassOf :ConexaoCurricular .
+
+
+###  http://example.com#Requer
+:Requer rdf:type owl:Class ;
+        rdfs:subClassOf :ConexaoCurricular .
+
+
+###  http://example.com#UnidadeTematica
+:UnidadeTematica rdf:type owl:Class ;
+                 owl:equivalentClass [ rdf:type owl:Class ;
+                                       owl:unionOf ( :UnidadeTematicaComputacao
+                                                     :UnidadeTematicaMatematica
+                                                   )
+                                     ] ;
+                 rdfs:subClassOf gufo:FunctionalComplex ,
+                                 [ rdf:type owl:Restriction ;
+                                   owl:onProperty :pertence_a_disciplina ;
+                                   owl:someValuesFrom :Disciplina
+                                 ] ,
+                                 [ rdf:type owl:Restriction ;
+                                   owl:onProperty :pertence_a_disciplina ;
+                                   owl:allValuesFrom :Disciplina
+                                 ] .
+
+
+###  http://example.com#UnidadeTematicaComputacao
+:UnidadeTematicaComputacao rdf:type owl:Class ;
+                           owl:equivalentClass [ owl:intersectionOf ( :UnidadeTematica
+                                                                      [ rdf:type owl:Restriction ;
+                                                                        owl:onProperty :pertence_a_disciplina ;
+                                                                        owl:someValuesFrom :Computacao
+                                                                      ]
+                                                                    ) ;
+                                                 rdf:type owl:Class
+                                               ] ;
+                           rdfs:subClassOf :UnidadeTematica ,
+                                           [ rdf:type owl:Restriction ;
+                                             owl:onProperty :pertence_a_disciplina ;
+                                             owl:allValuesFrom :Computacao
+                                           ] ;
+                           owl:disjointWith :UnidadeTematicaMatematica .
+
+
+###  http://example.com#UnidadeTematicaMatematica
+:UnidadeTematicaMatematica rdf:type owl:Class ;
+                           owl:equivalentClass [ owl:intersectionOf ( :UnidadeTematica
+                                                                      [ rdf:type owl:Restriction ;
+                                                                        owl:onProperty :pertence_a_disciplina ;
+                                                                        owl:someValuesFrom :Matematica
+                                                                      ]
+                                                                    ) ;
+                                                 rdf:type owl:Class
+                                               ] ;
+                           rdfs:subClassOf :UnidadeTematica ,
+                                           [ rdf:type owl:Restriction ;
+                                             owl:onProperty :pertence_a_disciplina ;
+                                             owl:allValuesFrom :Matematica
+                                           ] .
+
+
+###  http://example.com#6Ano
+<http://example.com#6Ano> rdf:type owl:Class ;
+                          rdfs:subClassOf :AnoEscolar ,
+                                          [ rdf:type owl:Restriction ;
+                                            owl:onProperty :precede_a ;
+                                            owl:someValuesFrom <http://example.com#7Ano>
+                                          ] .
+
+
+###  http://example.com#7Ano
+<http://example.com#7Ano> rdf:type owl:Class ;
+                          rdfs:subClassOf :AnoEscolar ,
+                                          [ rdf:type owl:Restriction ;
+                                            owl:onProperty :precede_a ;
+                                            owl:someValuesFrom <http://example.com#8Ano>
+                                          ] .
+
+
+###  http://example.com#8Ano
+<http://example.com#8Ano> rdf:type owl:Class ;
+                          rdfs:subClassOf :AnoEscolar ,
+                                          [ rdf:type owl:Restriction ;
+                                            owl:onProperty :precede_a ;
+                                            owl:someValuesFrom <http://example.com#9Ano>
+                                          ] .
+
+
+###  http://example.com#9Ano
+<http://example.com#9Ano> rdf:type owl:Class ;
+                          rdfs:subClassOf :AnoEscolar .
+
+
+#################################################################
+#    Individuals
+#################################################################
+
+###  http://example.com#Algoritmos_Sequenciais
+:Algoritmos_Sequenciais rdf:type owl:NamedIndividual ,
+                                 :ConceitoDisciplinar ;
+                        :especificado_por :Ano_6 ;
+                        :pertence_a_unidade :UT_PensamentoComputacional .
+
+
+###  http://example.com#Analogia_Transformacao
+:Analogia_Transformacao rdf:type owl:NamedIndividual ,
+                                 :Compartilha ;
+                        gufo:mediates :Criptografia ,
+                                      :Funcoes .
+
+
+###  http://example.com#AnoEscolar
+:AnoEscolar rdf:type owl:NamedIndividual ,
+                     gufo:Kind .
+
+
+###  http://example.com#Ano_6
+:Ano_6 rdf:type owl:NamedIndividual ,
+                <http://example.com#6Ano> .
+
+
+###  http://example.com#Ano_7
+:Ano_7 rdf:type owl:NamedIndividual ,
+                <http://example.com#7Ano> .
+
+
+###  http://example.com#Ano_8
+:Ano_8 rdf:type owl:NamedIndividual ,
+                <http://example.com#8Ano> .
+
+
+###  http://example.com#Ano_9
+:Ano_9 rdf:type owl:NamedIndividual ,
+                <http://example.com#9Ano> .
+
+
+###  http://example.com#Area_de_Figuras_Planas
+:Area_de_Figuras_Planas rdf:type owl:NamedIndividual ,
+                                 :ConceitoDisciplinar ;
+                        :especificado_por :Ano_8 ;
+                        :pertence_a_unidade :UT_GrandezasEMedidas .
+
+
+###  http://example.com#Compartilha
+:Compartilha rdf:type owl:NamedIndividual ,
+                      gufo:SubKind .
+
+
+###  http://example.com#Computacao
+:Computacao rdf:type owl:NamedIndividual ,
+                     gufo:Kind .
+
+
+###  http://example.com#ConceitoComputacional
+:ConceitoComputacional rdf:type owl:NamedIndividual ,
+                                gufo:SubKind .
+
+
+###  http://example.com#ConceitoDisciplinar
+:ConceitoDisciplinar rdf:type owl:NamedIndividual ,
+                              gufo:Kind .
+
+
+###  http://example.com#ConceitoMatematico
+:ConceitoMatematico rdf:type owl:NamedIndividual ,
+                             gufo:SubKind .
+
+
+###  http://example.com#Conduta_Digital
+:Conduta_Digital rdf:type owl:NamedIndividual ,
+                          :ConceitoDisciplinar ;
+                 :especificado_por :Ano_6 ;
+                 :pertence_a_unidade :UT_CulturaDigital .
+
+
+###  http://example.com#ConexaoCurricular
+:ConexaoCurricular rdf:type owl:NamedIndividual ,
+                            gufo:Kind .
+
+
+###  http://example.com#Criptografia
+:Criptografia rdf:type owl:NamedIndividual ,
+                       :ConceitoDisciplinar ;
+              :especificado_por :Ano_9 ;
+              :pertence_a_unidade :UT_MundoDigital ;
+              :relacionaSe_com :Numeros_Irracionais .
+
+
+###  http://example.com#Disc_Computacao
+:Disc_Computacao rdf:type owl:NamedIndividual ,
+                          :Computacao .
+
+
+###  http://example.com#Disc_Matematica
+:Disc_Matematica rdf:type owl:NamedIndividual ,
+                          :Matematica .
+
+
+###  http://example.com#Disciplina
+:Disciplina rdf:type owl:NamedIndividual ,
+                     gufo:Category .
+
+
+###  http://example.com#EnsinoFundamental2
+:EnsinoFundamental2 rdf:type owl:NamedIndividual ,
+                             gufo:Category .
+
+
+###  http://example.com#Experimentos_Aleatorios
+:Experimentos_Aleatorios rdf:type owl:NamedIndividual ,
+                                  :ConceitoDisciplinar ;
+                         :especificado_por :Ano_7 ;
+                         :pertence_a_unidade :UT_ProbabilidadeE_Estatistica .
+
+
+###  http://example.com#Funcoes
+:Funcoes rdf:type owl:NamedIndividual ,
+                  :ConceitoDisciplinar ;
+         :especificado_por :Ano_9 ;
+         :pertence_a_unidade :UT_Algebra .
+
+
+###  http://example.com#Grafos_e_Arvores
+:Grafos_e_Arvores rdf:type owl:NamedIndividual ,
+                           :ConceitoDisciplinar ;
+                  :especificado_por :Ano_9 ;
+                  :pertence_a_unidade :UT_PensamentoComputacional .
+
+
+###  http://example.com#Listas_e_Recursao
+:Listas_e_Recursao rdf:type owl:NamedIndividual ,
+                            :ConceitoDisciplinar ;
+                   :especificado_por :Ano_8 ;
+                   :pertence_a_unidade :UT_PensamentoComputacional .
+
+
+###  http://example.com#Matematica
+:Matematica rdf:type owl:NamedIndividual ,
+                     gufo:Kind .
+
+
+###  http://example.com#Matrizes_Unidimensionais
+:Matrizes_Unidimensionais rdf:type owl:NamedIndividual ,
+                                   :ConceitoDisciplinar ;
+                          :especificado_por :Ano_7 ;
+                          :pertence_a_unidade :UT_PensamentoComputacional .
+
+
+###  http://example.com#Numeros_Inteiros
+:Numeros_Inteiros rdf:type owl:NamedIndividual ,
+                           :ConceitoDisciplinar ;
+                  :especificado_por :Ano_7 ;
+                  :pertence_a_unidade :UT_Numeros .
+
+
+###  http://example.com#Numeros_Irracionais
+:Numeros_Irracionais rdf:type owl:NamedIndividual ,
+                              :ConceitoDisciplinar ;
+                     :especificado_por :Ano_9 ;
+                     :pertence_a_unidade :UT_Numeros .
+
+
+###  http://example.com#Plano_Cartesiano
+:Plano_Cartesiano rdf:type owl:NamedIndividual ,
+                           :ConceitoDisciplinar ;
+                  :especificado_por :Ano_6 ;
+                  :pertence_a_unidade :UT_Geometria ;
+                  :relacionaSe_com :Propriedades_de_Grafos .
+
+
+###  http://example.com#Prev_Mat_9ano
+:Prev_Mat_9ano rdf:type owl:NamedIndividual ,
+                        :Previsao ;
+               gufo:mediates :Ano_9 ,
+                             :Teorema_de_Pitágoras .
+
+
+###  http://example.com#Previsao
+:Previsao rdf:type owl:NamedIndividual ,
+                   gufo:Kind .
+
+
+###  http://example.com#Propriedades_da_Igualdade
+:Propriedades_da_Igualdade rdf:type owl:NamedIndividual ,
+                                    :ConceitoDisciplinar ;
+                           :especificado_por :Ano_6 ;
+                           :pertence_a_unidade :UT_Algebra .
+
+
+###  http://example.com#Propriedades_de_Grafos
+:Propriedades_de_Grafos rdf:type owl:NamedIndividual ,
+                                 :ConceitoDisciplinar ;
+                        :especificado_por :Ano_7 ;
+                        :pertence_a_unidade :UT_PensamentoComputacional ;
+                        :precede :Grafos_e_Arvores .
+
+
+###  http://example.com#Protocolos_de_Redes
+:Protocolos_de_Redes rdf:type owl:NamedIndividual ,
+                              :ConceitoDisciplinar ;
+                     :especificado_por :Ano_7 ;
+                     :pertence_a_unidade :UT_MundoDigital .
+
+
+###  http://example.com#Reforca
+:Reforca rdf:type owl:NamedIndividual ,
+                  gufo:SubKind .
+
+
+###  http://example.com#Reforco_Logico
+:Reforco_Logico rdf:type owl:NamedIndividual ,
+                         :Reforca ;
+                gufo:mediates :Algoritmos_Sequenciais ,
+                              :Propriedades_da_Igualdade .
+
+
+###  http://example.com#Requer
+:Requer rdf:type owl:NamedIndividual ,
+                 gufo:SubKind .
+
+
+###  http://example.com#Requisito_Coordenadas
+:Requisito_Coordenadas rdf:type owl:NamedIndividual ,
+                                :Requer ;
+                       gufo:mediates :Matrizes_Unidimensionais ,
+                                     :Plano_Cartesiano .
+
+
+###  http://example.com#Seguranca_Redes_Sociais
+:Seguranca_Redes_Sociais rdf:type owl:NamedIndividual ,
+                                  :ConceitoDisciplinar ;
+                         :especificado_por :Ano_8 ;
+                         :pertence_a_unidade :UT_CulturaDigital .
+
+
+###  http://example.com#Sistema_Decimal
+:Sistema_Decimal rdf:type owl:NamedIndividual ,
+                          :ConceitoDisciplinar ;
+                 :especificado_por :Ano_6 ;
+                 :pertence_a_unidade :UT_Numeros .
+
+
+###  http://example.com#Sistemas_de_Equacoes
+:Sistemas_de_Equacoes rdf:type owl:NamedIndividual ,
+                               :ConceitoDisciplinar ;
+                      :especificado_por :Ano_8 ;
+                      :pertence_a_unidade :UT_Algebra .
+
+
+###  http://example.com#Teorema_de_Pitágoras
+:Teorema_de_Pitágoras rdf:type owl:NamedIndividual ,
+                               :ConceitoDisciplinar ;
+                      :especificado_por :Ano_9 ;
+                      :pertence_a_unidade :UT_Geometria .
+
+
+###  http://example.com#Tipos_de_Dados
+:Tipos_de_Dados rdf:type owl:NamedIndividual ,
+                         :ConceitoDisciplinar ;
+                :especificado_por :Ano_6 ;
+                :pertence_a_unidade :UT_PensamentoComputacional .
+
+
+###  http://example.com#UT_Algebra
+:UT_Algebra rdf:type owl:NamedIndividual ,
+                     :UnidadeTematica ;
+            :pertence_a_disciplina :Disc_Matematica .
+
+
+###  http://example.com#UT_CulturaDigital
+:UT_CulturaDigital rdf:type owl:NamedIndividual ,
+                            :UnidadeTematica ;
+                   :pertence_a_disciplina :Disc_Computacao .
+
+
+###  http://example.com#UT_Geometria
+:UT_Geometria rdf:type owl:NamedIndividual ,
+                       :UnidadeTematica ;
+              :pertence_a_disciplina :Disc_Matematica .
+
+
+###  http://example.com#UT_GrandezasEMedidas
+:UT_GrandezasEMedidas rdf:type owl:NamedIndividual ,
+                               :UnidadeTematica ;
+                      :pertence_a_disciplina :Disc_Matematica .
+
+
+###  http://example.com#UT_MundoDigital
+:UT_MundoDigital rdf:type owl:NamedIndividual ,
+                          :UnidadeTematica ;
+                 :pertence_a_disciplina :Disc_Computacao .
+
+
+###  http://example.com#UT_Numeros
+:UT_Numeros rdf:type owl:NamedIndividual ,
+                     :UnidadeTematica ;
+            :pertence_a_disciplina :Disc_Matematica .
+
+
+###  http://example.com#UT_PensamentoComputacional
+:UT_PensamentoComputacional rdf:type owl:NamedIndividual ,
+                                     :UnidadeTematica ;
+                            :pertence_a_disciplina :Disc_Computacao .
+
+
+###  http://example.com#UT_ProbabilidadeE_Estatistica
+:UT_ProbabilidadeE_Estatistica rdf:type owl:NamedIndividual ,
+                                        :UnidadeTematica ;
+                               :pertence_a_disciplina :Disc_Matematica .
+
+
+###  http://example.com#UnidadeTematica
+:UnidadeTematica rdf:type owl:NamedIndividual ,
+                          gufo:Category .
+
+
+###  http://example.com#especifica
+:especifica rdf:type owl:NamedIndividual ,
+                     gufo:MaterialRelationshipType .
+
+
+###  http://example.com#precede_a
+:precede_a rdf:type owl:NamedIndividual ,
+                    gufo:ComparativeRelationshipType .
+
+
+###  http://example.com#relacionaSe_com
+:relacionaSe_com rdf:type owl:NamedIndividual ,
+                          gufo:MaterialRelationshipType .
+
+
+###  http://example.com#6Ano
+<http://example.com#6Ano> rdf:type owl:NamedIndividual ,
+                                   gufo:SubKind .
+
+
+###  http://example.com#7Ano
+<http://example.com#7Ano> rdf:type owl:NamedIndividual ,
+                                   gufo:SubKind .
+
+
+###  http://example.com#8Ano
+<http://example.com#8Ano> rdf:type owl:NamedIndividual ,
+                                   gufo:SubKind .
+
+
+###  http://example.com#9Ano
+<http://example.com#9Ano> rdf:type owl:NamedIndividual ,
+                                   gufo:SubKind .
+
+
+#################################################################
+#    Annotations
+#################################################################
+
+:AnoEscolar rdfs:label "Ano Escolar"@en .
+
+
+:Compartilha rdfs:label "Compartilha"@en .
+
+
+:Computacao rdfs:label "Computacao"@en .
+
+
+:ConceitoComputacional rdfs:label "Conceito Computacional"@en .
+
+
+:ConceitoDisciplinar rdfs:label "Conceito Disciplinar"@en .
+
+
+:ConceitoMatematico rdfs:label "Conceito Matematico"@en .
+
+
+:ConexaoCurricular rdfs:label "Conexao Curricular"@en .
+
+
+:Disciplina rdfs:label "Disciplina"@en .
+
+
+:EnsinoFundamental2 rdfs:label "Ensino Fundamental 2"@en .
+
+
+:Matematica rdfs:label "Matematica"@en .
+
+
+:Previsao rdfs:label "Previsao"@en .
+
+
+:Reforca rdfs:label "Reforca"@en .
+
+
+:Requer rdfs:label "Requer"@en .
+
+
+:UnidadeTematica rdfs:label "Unidade Tematica"@en .
+
+
+:especifica rdfs:label "/especifica"@en .
+
+
+:precede_a rdfs:label "precede_a"@en .
+
+
+:relacionaSe_com rdfs:label "/relaciona-se_com"@en .
+
+
+<http://example.com#6Ano> rdfs:label "6 ano"@en .
+
+
+<http://example.com#7Ano> rdfs:label "7 ano"@en .
+
+
+<http://example.com#8Ano> rdfs:label "8 ano"@en .
+
+
+<http://example.com#9Ano> rdfs:label "9 ano"@en .
+
+
+#################################################################
+#    General axioms
+#################################################################
+
+[ rdf:type owl:AllDisjointClasses ;
+  owl:members ( :AnoEscolar
+                :ConceitoDisciplinar
+                :Disciplina
+                :EnsinoFundamental2
+                :UnidadeTematica
+              )
+] .
+
+
+[ rdf:type owl:AllDisjointClasses ;
+  owl:members ( :Compartilha
+                :Reforca
+                :Requer
+              )
+] .
+
+
+[ rdf:type owl:AllDisjointClasses ;
+  owl:members ( <http://example.com#6Ano>
+                <http://example.com#7Ano>
+                <http://example.com#8Ano>
+                <http://example.com#9Ano>
+              )
+] .
+
+
+###  Generated by the OWL API (version 4.5.29.2024-05-13T12:11:03Z) https://github.com/owlcs/owlapi

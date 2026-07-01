@@ -89,7 +89,7 @@ Para atestar a capacidade de dedução lógica do modelo, a validação com SPAR
 1. **Primeira fase (sem inferência)**: As consultas procuraram por instâncias específicas. Como as instâncias foram cadastradas na superclasse genérica `ConceitoDisciplinar`, o retorno inicial foi vazio, comprovando a ausência de uma inserção manual direta.
 2. **Segunda fase (com inferência)**: Após a execução do raciocinador lógico HermiT, a ontologia aplicou as regras estruturadas e reclassificou os indivíduos de forma automática, permitindo que as consultas retornassem os conjuntos de dados completos.
 
-Abaixo, detalham-se as principais consultas formuladas para homologar as Questões de Competência:
+Abaixo, detalham-se as principais consultas formuladas para verificar as Questões de Competência:
 
 ---
 
@@ -141,7 +141,151 @@ SELECT ?comp ?mat WHERE {
     { ?mat :relacionaSe_com ?comp . }
 }
 ```
+### Parte 2 – Interdisciplinaridade via Relatores
 
+Extrai as conexões mediadas por eventos pedagógicos complexos baseados em gUFO (subclasses de `ConexaoCurricular`). Esta abordagem recupera os conceitos mediados pela propriedade `gufo:mediates`, aplicando um filtro (`FILTER IN`) para exibir textualmente a natureza semântica da relação (`Reforca`, `Compartilha` ou `Requer`).
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?comp ?tipoRelacao ?mat WHERE {
+    ?comp rdf:type :ConceitoComputacional .
+    ?mat rdf:type :ConceitoMatematico .
+    ?relator gufo:mediates ?comp .
+    ?relator gufo:mediates ?mat .
+    ?relator rdf:type ?tipoRelacao .
+    FILTER (?tipoRelacao IN (:Reforca, :Compartilha, :Requer))
+}
+```
+## QC4. Quais conceitos computacionais pertencem a um determinado eixo/unidade temática da BNCC?
+
+Filtra e organiza as competências digitais com base nos eixos da BNCC (como Cultura Digital ou Mundo Digital), utilizando a relação `:pertence_a_unidade`.
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?unidadeTematica ?conceito WHERE {
+    ?conceito rdf:type :ConceitoComputacional .
+    ?conceito :pertence_a_unidade ?unidadeTematica .
+} ORDER BY ?unidadeTematica
+```
+## QC5. Quais conceitos computacionais estão previstos para um determinado ano escolar?
+
+Busca na ontologia para mostrar a distribuição cronológica dos conceitos de Computação em um ano especificado, no exemplo o 6º ano.
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?conceito WHERE {
+    ?conceito rdf:type :ConceitoComputacional .
+    ?conceito :especificado_por :Ano_6 .
+}
+```
+## QC6. Quais conceitos matemáticos pertencem a uma determinada unidade temática da BNCC?
+
+Mapeia de forma análoga à QC4 as instâncias inferidas como pertencentes à disciplina de Matemática, agrupando-as pelas unidades temáticas estabelecidas no documento formal.
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?unidadeTematica ?conceito WHERE {
+    ?conceito rdf:type :ConceitoMatematico .
+    ?conceito :pertence_a_unidade ?unidadeTematica .
+} ORDER BY ?unidadeTematica
+```
+## QC7. Quais conceitos matemáticos estão previstos para um determinado ano escolar?
+
+Busca na ontologia para mostrar a distribuição cronológica de todos os conceitos de Matemática ao longo das quatro séries finais do Ensino Fundamental.
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?ano ?conceito WHERE {
+    ?conceito rdf:type :ConceitoMatematico .
+    ?conceito :especificado_por ?ano .
+} ORDER BY ?ano
+```
+## QC8. Como um conceito de matemática precede outro?
+
+Mapeia de forma estrita as dependências e a progressão de conteúdos da própria Matemática, utilizando a propriedade transitiva `:precede`.
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?conceitoBase ?conceitoAvancado WHERE {
+    ?conceitoBase rdf:type :ConceitoMatematico .
+    ?conceitoAvancado rdf:type :ConceitoMatematico .
+    ?conceitoBase :precede ?conceitoAvancado .
+}
+```
+
+# Consultas Extras
+
+Foram elaboradas mais três consultas extras para demonstrar que o modelo com inferência gera resultados consistentes.
+
+## 1. Inventário Geral de Conceitos
+
+Esta consulta varre a ontologia em busca de todas as instâncias cadastradas na superclasse abstrata `ConceitoDisciplinar`, mapeando-as aos seus respectivos anos letivos.
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?conceito ?ano WHERE {
+    ?conceito rdf:type :ConceitoDisciplinar .
+    ?conceito :especificado_por ?ano .
+} ORDER BY ?ano
+```
+## 2. Mapeamento das Unidades Temáticas e Disciplinas
+
+Consulta responsável por extrair a relação entre os eixos de ensino (Unidades Temáticas) e as disciplinas da Base Nacional Comum Curricular (BNCC).
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?unidade ?disciplina WHERE {
+    ?unidade rdf:type :UnidadeTematica .
+    ?unidade :pertence_a_disciplina ?disciplina .
+} ORDER BY ?disciplina
+```
+## 3. Precedência (Geral)
+
+Esta consulta omite as restrições de classes específicas e busca puramente pela existência da relação de dependência educacional entre quaisquer dois conceitos.
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?conceitoBase ?conceitoAvancado WHERE {
+    ?conceitoBase :precede ?conceitoAvancado .
+}
+```
+
+## Erros encontrado no processo de importação de OntoUML para OWL
+
+Passar o modelo desenhado (OntoUML) para o modelo funcional no Protégé (OWL) trouxe alguns desafios práticos bem interessantes. Lidar com as ferramentas de modelagem exigiu bastante paciência, testes e refações. Abaixo, estão listados os três principais problemas enfrentados e como foram resolvidos:
+
+**Conexões antigas**: Para ganhar tempo, foi reaproveitado partes de um modelo OntoUML mais antigo para montar uma nova versão. O problema é que, mesmo quando era apagado algumas ligações na tela da ferramenta, ela não deletava isso de verdade no código. Quando o arquivo era exportado para o Protégé essas ligações fantasmas iam junto, o que gerava erros. A solução foi fazer um modelo totalmente novo, desenvolvendo com bastante cuidado para não haver nenhum erro.
+
+**Direção das relações**: Na teoria usada (gUFO), as setas de uma relação de mediação precisam, obrigatoriamente, sair do Relator e apontar para os conceitos. No início, essas setas foram ligadas sem prestar muita atenção à direção. O Visual Paradigm até avisou que tinha invertido as setas automaticamente para corrigir, mas na hora de exportar para OWL, ele exportou exatamente como havia sido ligado, mesmo que visualmente estivesse correto. Isso quebrou o modelo no Protégé. Para consertar, as conexões tiveram que ser apagadas e refeitas na direção exata desde o começo.
+
+**Complexidade**: Ao ligar o raciocinador lógico (Reasoner) no Protégé para testar o sistema, foi notado que quanto maior a ontologia ficava, mais impossível era achar a causa de um erro. Um pequeno erro em uma regra fazia a ferramenta apontar falhas em vários lugares ao mesmo tempo. A melhor estratégia encontrada para lidar com isso foi a simplificação, a ontologia foi reduzida a um modelo mais básico, o que facilitou muito na hora de isolar e consertar os problemas.
 
 
 

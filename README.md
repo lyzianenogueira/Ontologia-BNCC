@@ -233,7 +233,7 @@ SELECT ?conceitoBase ?conceitoAvancado WHERE {
 
 # Consultas Extras
 
-Foram elaboradas mais três consultas extras para demonstrar que o modelo com inferência gera resultados consistentes.
+Foram elaboradas mais três consultas extras para mostrar que não apenas o modelo com inferência pode gerar resultado.
 
 ## 1. Inventário Geral de Conceitos
 

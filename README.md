@@ -52,3 +52,101 @@ A ontologia será especificada em OntoUML para a modelagem conceitual, depois se
 - **QC6.** Quais conceitos matemáticos pertencem a uma determinada unidade temática da BNCC?
 - **QC7.** Quais conceitos matemáticos estão previstos para um determinado ano escolar?
 - **QC8.** Como um conceito de matemática precede outro?
+
+
+
+
+# Implementação em OWL no Protégé
+
+A ontologia foi implementada em OWL para garantir expressividade e capacidade de inferência computacional. A seguir, é detalhado como os requisitos técnicos foram cumpridos.
+
+## Disjunção entre Classes
+Foram estabelecidas disjunções para garantir que um indivíduo não possa pertencer a mais de uma classe em um conjunto específico. Por exemplo, `Matematica` e `Computacao` são disjuntos, assim como os conceitos derivados (`ConceitoMatematico` e `ConceitoComputacional`) e as séries da grade curricular (`6Ano`, `7Ano`, `8Ano`, `9Ano`).
+
+## Condições Necessárias e Suficientes
+- **Classes Primitivas**: A maioria das classes base (ex: `ConceitoDisciplinar`, `AnoEscolar`, `UnidadeTematica`) é definida com `SubClassOf`, estabelecendo as condições estruturais que seus membros devem cumprir.
+- **Classes Definidas**: Classes como `ConceitoMatematico`, `ConceitoComputacional`, `ConceitoBase` e `ConceitoInterdisciplinar` são definidas com `EquivalentTo`. Isso permite que o inferenciador (reasoner) classifique automaticamente indivíduos nelas com base em suas propriedades.
+
+## Axiomas de Fechamento
+A propriedade `:pertence_a_unidade` na classe `ConceitoDisciplinar` utiliza restrições universais (`owl:allValuesFrom` / `only`) para garantir que um conceito só possa pertencer a instâncias exclusivas da classe `UnidadeTematica`, fechando o escopo da propriedade.
+
+## Propriedades e Quantificadores
+- **Object Properties**: Todas as propriedades têm domínios e imagens (ranges) bem definidos. Por exemplo, a propriedade `:especificado_por` liga a classe `ConceitoDisciplinar` à classe `AnoEscolar`.
+- **Características de Propriedades**: Propriedades foram caracterizadas para refinar sua semântica computacional. Foram definidos axiomas como `Transitive` (para `:precede`, indicando que se A precede B, e B precede C, logo A precede C), `Symmetric` (para `:relacionaSe_com`) e o pareamento de propriedades inversas, como `:contem_conceito` (`owl:inverseOf` `:pertence_a_unidade`).
+- **Quantificadores de Cardinalidade**: A ontologia usa quantificadores (`some`, `all`, `min`) para restringir as relações. Por exemplo, exige-se uma cardinalidade qualificada mínima (`min 1`) para os eventos interdisciplinares (`ConexaoCurricular`), garantindo que todo relator pedagógico deve mediar (`gufo:mediates`) ao menos um `ConceitoMatematico` e um `ConceitoComputacional`.
+
+## Indivíduos
+A ontologia é populada com indivíduos exemplos que ilustram a aplicação prática do modelo. Foram inseridos indivíduos estáticos para a grade (como `Ano_6`, `UT_Algebra`), conceitos das disciplinas (como `Propriedades_da_Igualdade` e `Algoritmos_Sequenciais`) e as instâncias das relações pedagógicas, como `Reforco_Logico` (Relator).
+
+---
+
+# Consultas SPARQL
+
+O objetivo principal da utilização das consultas SPARQL foi garantir que o modelo respondia adequadamente às **Questões de Competência (QCs)** definidas no Documento de Especificação de Requisitos da Ontologia (ORSD).
+
+Para atestar a capacidade de dedução lógica do modelo, a validação com SPARQL foi dividida em duas fases utilizando a API **Owlready2** em **Python**:
+
+1. **Primeira fase (sem inferência)**: As consultas procuraram por instâncias específicas. Como as instâncias foram cadastradas na superclasse genérica `ConceitoDisciplinar`, o retorno inicial foi vazio, comprovando a ausência de uma inserção manual direta.
+2. **Segunda fase (com inferência)**: Após a execução do raciocinador lógico HermiT, a ontologia aplicou as regras estruturadas e reclassificou os indivíduos de forma automática, permitindo que as consultas retornassem os conjuntos de dados completos.
+
+Abaixo, detalham-se as principais consultas formuladas para homologar as Questões de Competência:
+
+---
+
+## QC1. Quais são os conceitos de computação previstos para cada ano do Ensino Fundamental II?
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?ano ?conceito WHERE {
+  ?conceito rdf:type :ConceitoComputacional .
+  ?conceito :especificado_por ?ano .
+} ORDER BY ?ano
+```
+## QC2. Como um conceito de computação precede outro?
+
+Valida os pré-requisitos internos da disciplina de Computação, garantindo que o encadeamento pedagógico seja respeitado via propriedade transitiva `:precede`.
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?conceitoBase ?conceitoAvancado WHERE {
+    ?conceitoBase rdf:type :ConceitoComputacional .
+    ?conceitoAvancado rdf:type :ConceitoComputacional .
+    ?conceitoBase :precede ?conceitoAvancado .
+}
+```
+## QC3. Quais conceitos de computação se conectam com conceitos de Matemática?
+
+Esta questão avalia a interdisciplinaridade do modelo. Ela explora a semântica da interdisciplinaridade utilizando o operador `UNION` para buscar duas abordagens distintas: as conexões diretas (através da propriedade simétrica `:relacionaSe_com`) e as conexões indiretas mediadas por classes relatoras (como `Reforca`, `Requer` e `Compartilha`, subclasses de `ConexaoCurricular`). Devido a limitações técnicas da API em lidar com inferências num único bloco `UNION`, a consulta foi dividida em duas partes no código final.
+
+### Parte 1 – Interdisciplinaridade Direta
+
+Investiga as conexões diretas entre as matérias. Utiliza o operador `UNION` para mapear a propriedade simétrica `:relacionaSe_com` em ambas as direções, desviando das restrições de orientação do SPARQL.
+
+```sparql
+PREFIX : <http://example.com#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gufo: <http://purl.org/nemo/gufo#>
+
+SELECT ?comp ?mat WHERE {
+    ?comp rdf:type :ConceitoComputacional .
+    ?mat rdf:type :ConceitoMatematico .
+    { ?comp :relacionaSe_com ?mat . }
+    UNION
+    { ?mat :relacionaSe_com ?comp . }
+}
+```
+
+
+
+
+
+
+
+
+

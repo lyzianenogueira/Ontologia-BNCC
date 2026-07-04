@@ -8,20 +8,7 @@ st.set_page_config(page_title="Ontologia BNCC", layout="wide")
 
 st.title("Visualizador da Ontologia BNCC - Computação e Matemática")
 
-@st.cache_resource
-def load_and_populate_ontology():
-    my_world = World()
-    
-    # Obtendo o diretório atual onde o app.py está localizado
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    gufo_path = os.path.join(base_dir, "gUFO-RDF.rdf").replace("\\", "/")
-    onto_path = os.path.join(base_dir, "ontoBNCC.rdf").replace("\\", "/")
-    
-    # Carregando as ontologias usando caminhos dinâmicos
-    PREDEFINED_ONTOLOGIES["http://purl.org/nemo/gufo#/1.0.0"] = gufo_path
-    onto_gUFO = my_world.get_ontology(gufo_path).load()
-    ontoBNCC = my_world.get_ontology(onto_path).load()
-    
+def populate_ontology(ontoBNCC):
     with ontoBNCC:
         transf_geom = ontoBNCC.ConceitoDisciplinar("Transformacoes_Geometricas")
         transf_geom.especificado_por.append(ontoBNCC.Ano_7)
@@ -78,13 +65,33 @@ def load_and_populate_ontology():
         variaveis.pertence_a_unidade.append(ontoBNCC.UT_PensamentoComputacional)
         
         variaveis.relacionaSe_com.append(eq_1_grau)
-        
-    my_world.is_inferred = False
+
+
+@st.cache_resource
+def get_ontology_world(inferred=False):
+    my_world = World()
+    
+    # Obtendo o diretório atual onde o app.py está localizado
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    gufo_path = os.path.join(base_dir, "gUFO-RDF.rdf").replace("\\", "/")
+    onto_path = os.path.join(base_dir, "ontoBNCC.rdf").replace("\\", "/")
+    
+    # Carregando as ontologias usando caminhos dinâmicos
+    PREDEFINED_ONTOLOGIES["http://purl.org/nemo/gufo#/1.0.0"] = gufo_path
+    onto_gUFO = my_world.get_ontology(gufo_path).load()
+    ontoBNCC = my_world.get_ontology(onto_path).load()
+    
+    populate_ontology(ontoBNCC)
+    
+    if inferred:
+        with ontoBNCC:
+            sync_reasoner([ontoBNCC])
+            
     return my_world, ontoBNCC, onto_gUFO
 
 try:
     with st.spinner("Carregando ontologia e povoando a A-BOX..."):
-        my_world, ontoBNCC, onto_gUFO = load_and_populate_ontology()
+        my_world, ontoBNCC, onto_gUFO = get_ontology_world(inferred=False)
     st.success("Ontologias carregadas e povoadas com sucesso!")
 except Exception as e:
     st.error(f"Erro ao carregar ontologias: {e}")
@@ -248,24 +255,17 @@ with tab3:
 with tab4:
     st.header("Resultados do Modelo Inferred")
     
-    # Run reasoner if a button is clicked or just run it
     if st.button("Executar Raciocinador (Sync Reasoner)", type="primary"):
-        if getattr(my_world, "is_inferred", False):
-            st.info("O raciocinador já foi executado nesta sessão! (Dados já classificados)")
-        else:
-            with st.spinner("Executando o raciocinador (Inferência Lógica)..."):
-                with ontoBNCC:
-                    sync_reasoner([ontoBNCC])
-                my_world.is_inferred = True
-            st.success("Inferências geradas com sucesso!")
         st.session_state['reasoner_run'] = True
 
-    if st.session_state.get('reasoner_run', False) or getattr(my_world, "is_inferred", False):
-        st.session_state['reasoner_run'] = True
+    if st.session_state.get('reasoner_run', False):
+        with st.spinner("Executando o raciocinador (Inferência Lógica)..."):
+            my_world_inferred, _, _ = get_ontology_world(inferred=True)
+        st.success("Inferências geradas com sucesso!")
         st.markdown("Agora as consultas encontrarão os dados classificados!")
         for nome_qc, query in consultas.items():
             with st.expander(nome_qc, expanded=True):
-                resultados = list(my_world.sparql(PREFIXOS + query))
+                resultados = list(my_world_inferred.sparql(PREFIXOS + query))
                 render_results(resultados, query)
     else:
         st.warning("Clique no botão acima para executar o raciocinador e ver os resultados inferidos.")
